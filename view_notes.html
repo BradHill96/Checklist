@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>All Notes</title>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .note {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    .note-header {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .note-timestamp {
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
+  <!-- Firebase App (the core Firebase SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <!-- Firebase Firestore -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <h1>All Saved Notes</h1>
+  <div id="notes-container"></div>
+
+  <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyAqYdMntCLSJ0oyacCGV-gphdrFac6z8xg",
+  authDomain: "checklist-7d948.firebaseapp.com",
+  projectId: "checklist-7d948",
+  storageBucket: "checklist-7d948.firebasestorage.app",
+  messagingSenderId: "355052608187",
+  appId: "1:355052608187:web:4151f16f3cde8bc236679e"
+};
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Fetch notes from Firestore
+    db.collection("notes").orderBy("timestamp", "desc").get().then((querySnapshot) => {
+      const container = document.getElementById("notes-container");
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const noteDiv = document.createElement("div");
+        noteDiv.className = "note";
+
+        const header = document.createElement("div");
+        header.className = "note-header";
+        header.textContent = "Room: " + data.room;
+
+        const timestamp = document.createElement("div");
+        timestamp.className = "note-timestamp";
+        const date = data.timestamp.toDate();
+        timestamp.textContent = "Saved on: " + date.toLocaleString();
+
+        const content = document.createElement("div");
+        content.textContent = data.note;
+
+        noteDiv.appendChild(header);
+        noteDiv.appendChild(timestamp);
+        noteDiv.appendChild(content);
+
+        container.appendChild(noteDiv);
+      });
+    }).catch((error) => {
+      console.error("Error fetching notes: ", error);
+    });
+  </script>
+</body>
+</html>
