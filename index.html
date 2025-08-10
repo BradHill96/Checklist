@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Room Task Checklist</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 10px;
+      background-color: #41C9FA;
+    }
+    .room {
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+    .room summary {
+      padding: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      background-color: #e0f7ff;
+      border-radius: 8px 8px 0 0;
+    }
+    .tasks {
+      padding: 10px;
+    }
+    .task {
+      margin: 5px 0;
+      font-size: 18px;
+    }
+    select {
+      font-size: 16px;
+      padding: 5px;
+      margin-bottom: 15px;
+    }
+    .progress {
+      font-weight: bold;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+<h2>📋 Room Task Checklist</h2>
+
+<label for="roomSelect">🏠 Select Room:</label>
+<select id="roomSelect" onchange="showRoom(this.value)">
+  <option value="">--Choose a Room--</option>
+</select>
+
+<div id="roomsContainer"></div>
+
+<div class="progress" id="progressDisplay">✅ Completed Tasks: 0 / 415</div>
+
+<script>
+  const tasks = ["🧑‍🤝‍🧑 Staff Assist", "🚨 Nurse Call", "🛏️ Bed Mat", "🚿 Shower", "🚽 Ensuite"];
+  const totalRooms = 83;
+  const roomsContainer = document.getElementById("roomsContainer");
+  const roomSelect = document.getElementById("roomSelect");
+  const progressDisplay = document.getElementById("progressDisplay");
+  let totalTasks = totalRooms * tasks.length;
+  let completedTasks = 0;
+
+  function updateProgress() {
+    progressDisplay.textContent = `✅ Completed Tasks: ${completedTasks} / ${totalTasks}`;
+  }
+
+  function showRoom(roomId) {
+    roomsContainer.innerHTML = "";
+    if (!roomId) return;
+
+    const details = document.createElement("details");
+    details.className = "room";
+    details.open = true;
+
+    const summary = document.createElement("summary");
+    summary.textContent = `Room ${roomId}`;
+    details.appendChild(summary);
+
+    const taskDiv = document.createElement("div");
+    taskDiv.className = "tasks";
+
+    tasks.forEach(task => {
+      const label = document.createElement("label");
+      label.className = "task";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.onchange = function() {
+        completedTasks += this.checked ? 1 : -1;
+        updateProgress();
+      };
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(" " + task));
+      taskDiv.appendChild(label);
+      taskDiv.appendChild(document.createElement("br"));
+    });
+
+    details.appendChild(taskDiv);
+    roomsContainer.appendChild(details);
+  }
+
+  for (let i = 1; i <= totalRooms; i++) {
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = `Room ${i}`;
+    roomSelect.appendChild(option);
+  }
+
+  updateProgress();
+</script>
+
+</body>
+</html>
