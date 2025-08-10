@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Room Checklist</title>
+  <style>
+    body {
+      background-color: #fcd303;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .checklist {
+      margin-top: 20px;
+    }
+    .checklist label {
+      display: block;
+      margin: 5px 0;
+    }
+    button {
+      margin: 10px 5px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #progress {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Room Checklist</h1>
+  <label for="roomSelect">Select Room:</label>
+  <select id="roomSelect">
+    ${Array.from({length: 83}, (_, i) => `<option value="${i+1}">Room ${i+1}</option>`).join('')}
+  </select>
+
+  <div class="checklist">
+    <label><input type="checkbox" id="sa"> 🧑‍⚕️ SA</label>
+    <label><input type="checkbox" id="nc"> 📞 NC</label>
+    <label><input type="checkbox" id="bedMat"> 🛏️ Bed Mat</label>
+    <label><input type="checkbox" id="chairMat"> 🪑 Chair Mat</label>
+    <label><input type="checkbox" id="shower"> 🚿 Shower</label>
+    <label><input type="checkbox" id="ensuite"> 🚽 Ensuite</label>
+    <label><input type="checkbox" id="blankPlates"> 🧰 Blank Plates Installed</label>
+    <label><input type="checkbox" id="tidied"> 🧹 Tidied</label>
+  </div>
+
+  <button onclick="submitData()">Submit</button>
+  <div id="progress">Progress: 0%</div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // TODO: Replace with your Firebase project configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqYdMntCLSJ0oyacCGV-gphdrFac6z8xg",
+      authDomain: "checklist-7d948.firebaseapp.com",
+      projectId: "checklist-7d948",
+      storageBucket: "checklist-7d948.firebasestorage.app",
+      messagingSenderId: "355052608187",
+      appId: "1:355052608187:web:4151f16f3cde8bc236679e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function submitData() {
+      const room = document.getElementById('roomSelect').value;
+      const data = {
+        sa: document.getElementById('sa').checked,
+        nc: document.getElementById('nc').checked,
+        bedMat: document.getElementById('bedMat').checked,
+        chairMat: document.getElementById('chairMat').checked,
+        shower: document.getElementById('shower').checked,
+        ensuite: document.getElementById('ensuite').checked,
+        blankPlates: document.getElementById('blankPlates').checked,
+        tidied: document.getElementById('tidied').checked,
+        timestamp: new Date().toISOString()
+      };
+      await db.collection("roomChecklist").doc("room_" + room).set(data);
+      updateProgress();
+      alert("Data submitted for Room " + room);
+    }
+
+    async function updateProgress() {
+      const snapshot = await db.collection("roomChecklist").get();
+      const completed = snapshot.size;
+      const percent = Math.round((completed / 83) * 100);
+      document.getElementById("progress").innerText = "Progress: " + percent + "%";
+    }
+
+    updateProgress();
+  </script>
+</body>
+</html>
