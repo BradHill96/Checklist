@@ -1,0 +1,131 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Timesheet Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #EDEDED;
+      padding: 20px;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      background-color: #fff;
+      cursor: pointer;
+    }
+    .output {
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    #copyStatus {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🕒 Timesheet Tracker</h2>
+
+<div class="section">
+  <button onclick="startWork()">▶️ Start Work</button>
+  <button onclick="stopWork()">⏹️ Stop Work</button>
+  <div class="output" id="workOutput"></div>
+</div>
+
+<div class="section">
+  <button onclick="startTravel()">🚗 Start Travel</button>
+  <button onclick="stopTravel()">🛑 Stop Travel</button>
+  <div class="output" id="travelOutput"></div>
+</div>
+
+<div class="section">
+  <button onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+  <div id="copyStatus"></div>
+</div>
+
+<script>
+  let workStart, workEnd, travelStart, travelEnd;
+  let workTimer, travelTimer;
+  let workSeconds = 0, travelSeconds = 0;
+
+  function formatTime(date) {
+    return date.toLocaleString();
+  }
+
+  function formatDuration(seconds) {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    return `${hrs}h ${mins}m`;
+  }
+
+  function startWork() {
+    workStart = new Date();
+    workSeconds = 0;
+    document.getElementById("workOutput").innerHTML = `Start: ${formatTime(workStart)}<br>⏱️ Running...`;
+    workTimer = setInterval(() => {
+      workSeconds++;
+    }, 1000);
+  }
+
+  function stopWork() {
+    workEnd = new Date();
+    clearInterval(workTimer);
+    const duration = formatDuration(workSeconds);
+    document.getElementById("workOutput").innerHTML = `Start: ${formatTime(workStart)}<br>Stop: ${formatTime(workEnd)}<br>Total Time: ${duration}`;
+  }
+
+  function startTravel() {
+    travelStart = new Date();
+    travelSeconds = 0;
+    document.getElementById("travelOutput").innerHTML = `Start: ${formatTime(travelStart)}<br>🚗 Traveling...`;
+    travelTimer = setInterval(() => {
+      travelSeconds++;
+    }, 1000);
+  }
+
+  function stopTravel() {
+    travelEnd = new Date();
+    clearInterval(travelTimer);
+    const duration = formatDuration(travelSeconds);
+    document.getElementById("travelOutput").innerHTML = `Start: ${formatTime(travelStart)}<br>Stop: ${formatTime(travelEnd)}<br>Travel Time: ${duration}`;
+  }
+
+  function copyToClipboard() {
+    const totalHours = workSeconds / 3600;
+    const regular = Math.min(totalHours, 8);
+    const overtime = Math.max(totalHours - 8, 0);
+    const text = `
+Timesheet Entry 🕒
+Work Start: ${workStart ? formatTime(workStart) : "N/A"}
+Work Stop: ${workEnd ? formatTime(workEnd) : "N/A"}
+Total Time: ${formatDuration(workSeconds)}
+Travel Start: ${travelStart ? formatTime(travelStart) : "N/A"}
+Travel Stop: ${travelEnd ? formatTime(travelEnd) : "N/A"}
+Travel Time: ${formatDuration(travelSeconds)}
+Regular Time: ${regular.toFixed(2)} hrs
+Overtime: ${overtime.toFixed(2)} hrs
+    `.trim();
+
+    navigator.clipboard.writeText(text).then(() => {
+      document.getElementById("copyStatus").innerText = "✅ Copied to clipboard!";
+    });
+  }
+</script>
+
+</body>
+</html>
