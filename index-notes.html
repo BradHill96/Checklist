@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Room Notes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f6f6f6;
+      margin: 0;
+      padding: 0;
+      color: #222;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+      padding: 24px 18px 30px 18px;
+    }
+    h2 {
+      color: #1199ee;
+      margin-top: 0;
+      text-align: center;
+    }
+    #firebase-notes {
+      background-color: #41C9FA;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    textarea {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      border-radius: 6px;
+      border: 1px solid #b8e6fa;
+      padding: 10px;
+      font-size: 1em;
+      margin-bottom: 8px;
+      resize: vertical;
+      background: #fafdff;
+      color: #222;
+    }
+    button, .view-notes-btn {
+      background: linear-gradient(90deg,#41C9FA 85%,#1199ee 100%);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 22px;
+      font-size: 1em;
+      margin: 6px 0;
+      cursor: pointer;
+      transition: background 0.2s;
+      box-shadow: 0 2px 6px rgba(17,153,238,0.06);
+      display: block;
+      width: 100%;
+    }
+    button:hover, .view-notes-btn:hover {
+      background: linear-gradient(90deg,#1199ee 85%,#41C9FA 100%);
+    }
+    #notesDisplay {
+      margin-top: 20px;
+      word-break: break-word;
+    }
+    @media (max-width: 700px) {
+      .container {
+        margin: 10px;
+        padding: 12px 5px 20px 5px;
+      }
+      textarea {
+        font-size: 1em;
+      }
+    }
+    @media (max-width: 400px) {
+      h2 {
+        font-size: 1.1em;
+      }
+      button, .view-notes-btn {
+        font-size: 0.95em;
+        padding: 9px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Room Notes</h2>
+    <div id="firebase-notes">
+      <textarea id="noteInput" placeholder="Enter your note here..." rows="4"></textarea>
+      <button id="saveNoteBtn">Save Note</button>
+      <!-- Optional: Add a back button to main page -->
+      <button onclick="window.location.href='index.html'" class="view-notes-btn" style="background: #1199ee;">Back to Checklist</button>
+      <div id="notesDisplay"></div>
+    </div>
+  </div>
+  <script type="module">
+    // Add your Firebase initialization and notes logic here
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+    import { getFirestore, collection, setDoc, doc, getDocs, deleteDoc, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqYdMntCLSJ0oyacCGV-gphdrFac6z8xg",
+      authDomain: "checklist-7d948.firebaseapp.com",
+      projectId: "checklist-7d948",
+      storageBucket: "checklist-7d948.appspot.com",
+      messagingSenderId: "355052608187",
+      appId: "1:355052608187:web:4151f16f3cde8bc236679e"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const noteInput = document.getElementById("noteInput");
+    const saveNoteBtn = document.getElementById("saveNoteBtn");
+    const notesDisplay = document.getElementById("notesDisplay");
+
+    // Save note
+    saveNoteBtn.onclick = async () => {
+      const note = noteInput.value.trim();
+      if (!note) return alert("Please enter a note.");
+      const timestamp = new Date().toISOString();
+      await addDoc(collection(db, "roomNotes"), { note, timestamp });
+      noteInput.value = "";
+      loadNotes();
+    };
+
+    // Load notes
+    async function loadNotes() {
+      notesDisplay.innerHTML = "<em>Loading notes...</em>";
+      const q = query(collection(db, "roomNotes"), orderBy("timestamp", "desc"));
+      const snapshot = await getDocs(q);
+      let html = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const date = new Date(data.timestamp).toLocaleString();
+        html += `<div style="background:#fafdff;border:1px solid #b8e6fa;border-radius:6px;padding:10px;margin-bottom:10px;">
+          <div style="color:#1199ee;font-weight:bold;font-size:0.95em;">${date}</div>
+          <div style="margin-top:4px;">${data.note.replace(/\n/g, "<br>")}</div>
+        </div>`;
+      });
+      notesDisplay.innerHTML = html || "<em>No notes have been saved yet.</em>";
+    }
+    loadNotes();
+  </script>
+</body>
+</html>
