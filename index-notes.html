@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checklist</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Existing content here -->
+  <button onclick="window.location.href='notes.html'" class="view-notes-btn">View Notes</button>
+  
+  <button id="submitBtn">Submit</button>
+  <button id="viewBtn">View Saved Data</button>
+  <button id="exportBtn">Export Data</button>
+  <button id="eraseBtn">Erase Selected Room Data</button>
+  <button id="clearAllBtn">Clear All Data</button>
+  <textarea cols="50" id="dataBox" placeholder="Saved data will appear here..." rows="10"></textarea>
+  <div id="progress">Progress: 0%</div>
+
+  <div id="firebase-notes" style="background-color: #41C9FA; padding: 15px; border-radius: 8px; margin-top: 20px;">
+    <h3>Room Notes</h3>
+    <textarea cols="50" id="noteInput" placeholder="Enter your note here..." rows="4"></textarea>
+    <br/>
+    <button id="saveNoteBtn">Save Note</button>
+    <div id="notesDisplay" style="margin-top: 20px;"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+    import { getFirestore, collection, setDoc, doc, getDocs, deleteDoc, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqYdMntCLSJ0oyacCGV-gphdrFac6z8xg",
+      authDomain: "checklist-7d948.firebaseapp.com",
+      projectId: "checklist-7d948",
+      storageBucket: "checklist-7d948.appspot.com",
+      messagingSenderId: "355052608187",
+      appId: "1:355052608187:web:4151f16f3cde8bc236679e"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Elements
+    const roomSelect = document.getElementById("roomSelect");
+    const checkboxes = document.querySelectorAll(".item-checkbox");
+    const submitBtn = document.getElementById("submitBtn");
+    const viewBtn = document.getElementById("viewBtn");
+    const exportBtn = document.getElementById("exportBtn");
+    const eraseBtn = document.getElementById("eraseBtn");
+    const clearAllBtn = document.getElementById("clearAllBtn");
+    const dataBox = document.getElementById("dataBox");
+    const progress = document.getElementById("progress");
+    const checkAll = document.getElementById("checkAll");
+    const noteInput = document.getElementById("noteInput");
+    const saveNoteBtn = document.getElementById("saveNoteBtn");
+    const notesDisplay = document.getElementById("notesDisplay");
+
+    // Progress
+    async function updateProgress() {
+      const checklistRef = collection(db, "roomChecklist");
+      const snapshot = await getDocs(checklistRef);
+      const completed = snapshot.size;
+      const percent = Math.round((completed / 83) * 100);
+      progress.textContent = `Progress: ${percent}%`;
+    }
+
+    submitBtn.onclick = async () => {
+      const room = roomSelect.value;
+      if (!room) return alert("Please select a room.");
+      const items = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      const timestamp = new Date().toISOString();
+      await setDoc(doc(db, "roomChecklist", room), { room, items, timestamp });
+      alert("Data submitted!");
+      checkboxes.forEach(cb => cb.checked = false);
+      checkAll.checked = false;
+      updateProgress();
+    };
+
+    viewBtn.onclick = async () => {
+      // Your existing logic for viewing saved data
+    };
+
+    // ...rest of your script...
+  </script>
+</body>
+</html>
