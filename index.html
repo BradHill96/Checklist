@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Room Checklist</title>
+<style>
+    body {
+      background-color: #fcd303;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    select, button, textarea {
+      display: block;
+      margin: 10px 0;
+      font-size: 16px;
+      padding: 8px;
+    }
+    label {
+      display: block;
+      margin: 5px 0;
+    }
+    .checklist {
+      margin-bottom: 20px;
+    }
+    #progress {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      margin-top: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background-color: #45a049;
+    }
+    #note-section {
+      margin-top: 28px;
+      background: #fffbe0;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px 0 rgba(100,100,0,0.05);
+    }
+    #note-input {
+      width: 100%;
+      height: 100px;
+      border-radius: 6px;
+      border: 1px solid #d6c203;
+      font-size: 16px;
+      padding: 8px;
+      margin-bottom: 8px;
+      resize: vertical;
+      background: #fffde7;
+    }
+    .note-btn-row {
+      display: flex;
+      gap: 10px;
+    }
+    @media (max-width: 500px) {
+      .note-btn-row { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+    .check-all-label {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+</style>
+</head>
+<body>
+<h2>Room Checklist</h2>
+<label for="roomSelect">Select Room:</label>
+<select id="roomSelect">
+<option value="">--Select Room--</option>
+<script>
+  for(let i=1;i<=83;i++)document.write(`<option value="Room ${i}">Room ${i}</option>`);
+</script>
+</select>
+<div class="checklist">
+  <label class="check-all-label"><input type="checkbox" id="checkAll"> Check All</label>
+  <label><input type="checkbox" class="room-checkbox" value="SA"/> 🧑‍⚕️ SA</label>
+  <label><input type="checkbox" class="room-checkbox" value="NC"/> 📞 NC</label>
+  <label><input type="checkbox" class="room-checkbox" value="Bed Mat"/> 🛏️ Bed Mat</label>
+  <label><input type="checkbox" class="room-checkbox" value="Chair Mat"/> 🪑 Chair Mat</label>
+  <label><input type="checkbox" class="room-checkbox" value="Shower"/> 🚿 Shower</label>
+  <label><input type="checkbox" class="room-checkbox" value="Ensuite"/> 🚽 Ensuite</label>
+  <label><input type="checkbox" class="room-checkbox" value="Blank Plates Installed"/> 🧰 Blank Plates Installed</label>
+  <label><input type="checkbox" class="room-checkbox" value="Tidied"/> 🧹 Tidied</label>
+</div>
+<button id="submitBtn" class="btn">Submit</button>
+<button id="viewBtn" class="btn">View Saved Data</button>
+<button id="exportBtn" class="btn">Export Data</button>
+<button id="eraseBtn" class="btn">Erase Selected Room Data</button>
+<button id="clearAllBtn" class="btn">Clear All Data</button>
+<textarea cols="50" id="dataBox" placeholder="Saved data will appear here..." rows="10"></textarea>
+<div id="progress">Progress: 0%</div>
+
+<!-- Note section at the bottom -->
+<div id="note-section">
+  <textarea id="note-input" placeholder="Enter your note here..."></textarea>
+  <div class="note-btn-row">
+    <button class="btn" id="save-note">Save Note</button>
+    <button class="btn" id="view-notes" onclick="window.location.href='index-notes.html'">View Notes</button>
+  </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+    import { getFirestore, collection, setDoc, doc, getDocs, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqYdMntCLSJ0oyacCGV-gphdrFac6z8xg",
+      authDomain: "checklist-7d948.firebaseapp.com",
+      projectId: "checklist-7d948",
+      storageBucket: "checklist-7d948.appspot.com",
+      messagingSenderId: "355052608187",
+      appId: "1:355052608187:web:4151f16f3cde8bc236679e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const checklistRef = collection(db, "roomChecklist");
+    const notesRef = collection(db, "roomNotes");
+
+    const roomSelect = document.getElementById("roomSelect");
+    const checkboxes = document.querySelectorAll(".room-checkbox");
+    const submitBtn = document.getElementById("submitBtn");
+    const viewBtn = document.getElementById("viewBtn");
+    const exportBtn = document.getElementById("exportBtn");
+    const eraseBtn = document.getElementById("eraseBtn");
+    const clearAllBtn = document.getElementById("clearAllBtn");
+    const dataBox = document.getElementById("dataBox");
+    const progress = document.getElementById("progress");
+
+    async function updateProgress() {
+      const snapshot = await getDocs(checklistRef);
+      const completed = snapshot.size;
+      const percent = Math.round((completed / 83) * 100);
+      progress.textContent = `Progress: ${percent}%`;
+    }
+
+    submitBtn.onclick = async () => {
+      const room = roomSelect.value;
+      if (!room) return alert("Please select a room.");
+      const items = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      const timestamp = new Date().toISOString();
+      await setDoc(doc(db, "roomChecklist", room), { room, items, timestamp });
+      alert("Data submitted!");
+      checkboxes.forEach(cb => cb.checked = false);
+      document.getElementById('checkAll').checked = false;
+      updateProgress();
+    };
+
+    viewBtn.onclick = async () => {
+      const snapshot = await getDocs(checklistRef);
+      let output = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        output += `${data.room}: ${data.items.join(", ")} (${data.timestamp})\n`;
+      });
+      dataBox.value = output;
+    };
+
+    exportBtn.onclick = async () => {
+      const snapshot = await getDocs(checklistRef);
+      let output = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        output += `${data.room}: ${data.items.join(", ")} (${data.timestamp})\n`;
+      });
+      const blob = new Blob([output], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "room_checklist.txt";
+      link.click();
+    };
+
+    eraseBtn.onclick = async () => {
+      const room = roomSelect.value;
+      if (!room) return alert("Please select a room.");
+      if (confirm(`Are you sure you want to erase data for ${room}?`)) {
+        await deleteDoc(doc(db, "roomChecklist", room));
+        alert("Room data erased.");
+        updateProgress();
+      }
+    };
+
+    clearAllBtn.onclick = async () => {
+      if (confirm("Are you sure you want to clear ALL data?")) {
+        const snapshot = await getDocs(checklistRef);
+        const promises = [];
+        snapshot.forEach(doc => {
+          promises.push(deleteDoc(doc.ref));
+        });
+        await Promise.all(promises);
+        alert("All data cleared.");
+        updateProgress();
+      }
+    };
+
+    updateProgress();
+
+    // Note saving logic
+    const noteInput = document.getElementById('note-input');
+    const saveNoteBtn = document.getElementById('save-note');
+    saveNoteBtn.onclick = async () => {
+      const room = roomSelect.value;
+      const note = noteInput.value.trim();
+      if (!room) return alert("Please select a room to assign the note to.");
+      if (!note) return alert("Please enter a note.");
+      const timestamp = new Date().toISOString();
+      // Add a new note document for this room
+      await addDoc(notesRef, { room, note, timestamp });
+      // Optionally clear the note field
+      noteInput.value = "";
+      alert("Note saved!");
+    };
+
+    // "Check All" functionality
+    const checkAll = document.getElementById('checkAll');
+    checkAll.addEventListener('change', function() {
+      checkboxes.forEach(cb => cb.checked = checkAll.checked);
+    });
+    // Uncheck "Check All" if any are unchecked, check "Check All" if all are checked
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', function() {
+        if (!cb.checked) {
+          checkAll.checked = false;
+        } else if ([...checkboxes].every(b => b.checked)) {
+          checkAll.checked = true;
+        }
+      });
+    });
+</script>
+</body>
+</html>
